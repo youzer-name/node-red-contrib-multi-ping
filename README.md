@@ -2,6 +2,7 @@
 
 A Node-RED node to ping multiple hosts with advanced logic modes.
 
+I use this node to check whether a phone is reachable via either LAN or via VPN wtih a different IP on each network.
 
 ## Features
 - Enter a comma-separated list of IPs or hostnames to ping
