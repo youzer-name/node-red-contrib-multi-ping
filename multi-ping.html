@@ -1,0 +1,81 @@
+<script type="text/javascript">
+RED.nodes.registerType('multi-ping', {
+    category: 'network',
+    color: '#a6bbcf',
+    defaults: {
+        name: { value: "" },
+        host: { value: "", required: true },
+        mode: { value: "anyup", required: true },
+        timer: { value: 0 }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "font-awesome/fa-tasks.png",
+    label: function() {
+        return this.name || "multi-ping";
+    },
+    oneditprepare: function() {
+        $("#node-input-mode").typedInput({
+            type: "mode",
+            types: [
+                {
+                    value: "anyup",
+                    label: "Any Up"
+                },
+                {
+                    value: "anydown",
+                    label: "Any Down"
+                },
+                {
+                    value: "allup",
+                    label: "All Up"
+                },
+                {
+                    value: "alldown",
+                    label: "All Down"
+                }
+            ]
+        });
+    },
+    paletteLabel: "multi-ping",
+    labelStyle: function() {
+        return this.name ? "node_label_italic" : "";
+    },
+    description: "Ping multiple hosts and return status based on selected mode. Enter a comma-separated list of IPs or hostnames in the Target field. Modes: Any Up (returns up if any host is up), Any Down (returns down if any host is down), All Up (returns up only if all hosts are up), All Down (returns down only if all hosts are down)."
+});
+</script>
+
+<div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+</div>
+<div class="form-row">
+    <label for="node-input-host"><i class="fa fa-globe"></i> Target</label>
+    <input type="text" id="node-input-host" placeholder="Comma-separated list of IPs or hostnames">
+</div>
+<div class="form-row">
+    <label for="node-input-mode"><i class="fa fa-cogs"></i> Mode</label>
+    <select id="node-input-mode">
+        <option value="anyup">Any Up</option>
+        <option value="anydown">Any Down</option>
+        <option value="allup">All Up</option>
+        <option value="alldown">All Down</option>
+    </select>
+</div>
+<div class="form-row">
+    <label for="node-input-timer"><i class="fa fa-clock-o"></i> Interval (seconds)</label>
+    <input type="number" id="node-input-timer" min="0" placeholder="0 = only on input">
+</div>
+
+<div class="form-tips">
+    <b>How to use:</b><br>
+    Enter a comma-separated list of IP addresses or hostnames in the <b>Target</b> field.<br>
+    Select a <b>Mode</b> to determine how the node evaluates the ping results:<br>
+    <ul>
+        <li><b>Any Up</b>: Returns up if any host is up.</li>
+        <li><b>Any Down</b>: Returns down if any host is down.</li>
+        <li><b>All Up</b>: Returns up only if all hosts are up.</li>
+        <li><b>All Down</b>: Returns down only if all hosts are down.</li>
+    </ul>
+    Optionally set an <b>Interval</b> to ping automatically, or leave as 0 to only ping on input.
+</div>
