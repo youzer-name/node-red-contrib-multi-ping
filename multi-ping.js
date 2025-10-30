@@ -8,6 +8,8 @@ module.exports = function(RED) {
         node.host = config.host;
         node.mode = config.mode || 'anyup';
         node.timer = Number(config.timer) || 0;
+    node.maxAttempts = Number(config.maxAttempts) || 1;
+    node.timeout = Number(config.timeout) || 2;
         let interval = null;
 
         function parseHosts(hosts) {
@@ -19,27 +21,44 @@ module.exports = function(RED) {
             let status = null;
             let upCount = 0;
             let downCount = 0;
+            let checked = new Array(hosts.length).fill(false);
+            let breakIndex = hosts.length;
             for (let i = 0; i < hosts.length; i++) {
-                try {
-                    let res = await ping.promise.probe(hosts[i], { timeout: 2 });
-                    results.push({ host: hosts[i], alive: res.alive });
-                    if (res.alive) upCount++;
-                    else downCount++;
-                    if (mode === 'anyup' && res.alive) {
-                        status = 'up';
+                let alive = false;
+                let attempt = 0;
+                let error = false;
+                for (attempt = 0; attempt < node.maxAttempts; attempt++) {
+                    try {
+                        let res = await ping.promise.probe(hosts[i], { timeout: node.timeout });
+                        if (res.alive) {
+                            alive = true;
+                            break;
+                        }
+                    } catch (err) {
+                        error = true;
+                        // If error, treat as down and break
                         break;
                     }
-                    if (mode === 'anydown' && !res.alive) {
-                        status = 'down';
-                        break;
-                    }
-                } catch (err) {
-                    results.push({ host: hosts[i], alive: false });
-                    downCount++;
-                    if (mode === 'anydown') {
-                        status = 'down';
-                        break;
-                    }
+                }
+                results.push({ host: hosts[i], alive: error ? false : (alive ? true : false) });
+                checked[i] = true;
+                if (alive) upCount++;
+                else downCount++;
+                if (mode === 'anyup' && alive) {
+                    status = 'up';
+                    breakIndex = i + 1;
+                    break;
+                }
+                if (mode === 'anydown' && !alive) {
+                    status = 'down';
+                    breakIndex = i + 1;
+                    break;
+                }
+            }
+            // For 'any' modes, fill in skipped hosts with alive: null
+            if (mode === 'anyup' || mode === 'anydown') {
+                for (let i = breakIndex; i < hosts.length; i++) {
+                    results.push({ host: hosts[i], alive: null });
                 }
             }
             if (!status) {

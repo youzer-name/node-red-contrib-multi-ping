@@ -1,7 +1,11 @@
 {
   "name": "node-red-contrib-multi-ping",
   "version": "1.0.0",
-  "description": "A Node-RED node to ping multiple hosts with advanced logic modes.",
+  "description": "A Node-RED node to ping multiple hosts and output a single up/down status.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/youzer-name/node-red-contrib-multi-ping.git"
+  },
   "main": "multi-ping.js",
   "scripts": {
     "test": "echo \"No tests specified\" && exit 0"
@@ -13,7 +17,7 @@
     "network",
     "node-red-contrib"
   ],
-  "author": "Your Name",
+  "author": "@youzer-name <youzer-name.sage661@passmail.net>",
   "license": "MIT",
   "node-red": {
     "nodes": {

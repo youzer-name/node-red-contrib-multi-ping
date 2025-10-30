@@ -1,41 +1,45 @@
+</script>
+
+<script type="text/html" data-help-name="multi-ping">
+<p><b>Multi-Ping</b> allows you to ping multiple hosts and evaluate the results using flexible logic modes.</p>
+<ul>
+    <li><b>Target</b>: Comma-separated list of IP addresses or hostnames to ping.</li>
+    <li><b>Mode</b>:
+        <ul>
+            <li><b>Any Up</b>: Returns up if any host is up. Returns down if all hosts are down.  (stops at first reachable host)</li>
+            <li><b>All Down</b>: Returns up if any host is up. Returns down only if all hosts are down.  (always checks all hosts)</li>
+            <li><b>Any Down</b>: Returns up only if all hosts are up.  Returns down if any host is down (stops at first unreachable host)</li>
+            <li><b>All Up</b>: Returns up only if all hosts are up.  Returns down if any host is down. (always checks all hosts)</li>
+        </ul>
+    </li>
+    <li><b>Interval</b>: How often to ping automatically (0 = only on input).</li>
+    <li><b>Max Attempts</b>: Number of ping attempts per host before marking as failed (1-10).</li>
+    <li><b>Timeout</b>: Timeout for each ping attempt in seconds (1-30).</li>
+</ul>
+<p><b>Output:</b></p>
+<ul>
+    <li><code>msg.payload.status</code>: <code>"up"</code> or <code>"down"</code> based on the selected mode.</li>
+    <li><code>msg.payload.results</code>: Array of objects for each host: <code>{ host, alive }</code>. If a host was not checked (in 'any' modes), <code>alive</code> will be <code>null</code>.</li>
+</ul>
+
+</script>
 <script type="text/javascript">
 RED.nodes.registerType('multi-ping', {
     category: 'network',
-    color: '#a6bbcf',
+    color: '#FDF0C2',
     defaults: {
         name: { value: "" },
-        host: { value: "", required: true },
+        host: { value: "", required: true, validate: function(v) { return v && v.trim().length > 0; } },
         mode: { value: "anyup", required: true },
-        timer: { value: 0 }
+        timer: { value: 0, validate: function(v) { return !isNaN(v) && v >= 0; } },
+        maxAttempts: { value: 1, required: true, validate: function(v) { return !isNaN(v) && v >= 1 && v <= 10; } },
+        timeout: { value: 2, required: true, validate: function(v) { return !isNaN(v) && v >= 1 && v <= 30; } }
     },
     inputs: 1,
     outputs: 1,
-    icon: "font-awesome/fa-tasks.png",
+    icon: "alert.png",
     label: function() {
         return this.name || "multi-ping";
-    },
-    oneditprepare: function() {
-        $("#node-input-mode").typedInput({
-            type: "mode",
-            types: [
-                {
-                    value: "anyup",
-                    label: "Any Up"
-                },
-                {
-                    value: "anydown",
-                    label: "Any Down"
-                },
-                {
-                    value: "allup",
-                    label: "All Up"
-                },
-                {
-                    value: "alldown",
-                    label: "All Down"
-                }
-            ]
-        });
     },
     paletteLabel: "multi-ping",
     labelStyle: function() {
@@ -45,17 +49,19 @@ RED.nodes.registerType('multi-ping', {
 });
 </script>
 
+<script type="text/html" data-template-name="multi-ping">
+
 <div class="form-row">
-    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-    <input type="text" id="node-input-name" placeholder="Name">
+    <label for="node-input-name" title="Optional label for this node"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" title="Optional label for this node">
 </div>
 <div class="form-row">
-    <label for="node-input-host"><i class="fa fa-globe"></i> Target</label>
-    <input type="text" id="node-input-host" placeholder="Comma-separated list of IPs or hostnames">
+    <label for="node-input-host" title="Comma-separated list of IPs or hostnames to ping"><i class="fa fa-globe"></i> Target</label>
+    <input type="text" id="node-input-host" placeholder="Comma-separated list of IPs or hostnames" title="Comma-separated list of IPs or hostnames to ping" required>
 </div>
 <div class="form-row">
-    <label for="node-input-mode"><i class="fa fa-cogs"></i> Mode</label>
-    <select id="node-input-mode">
+    <label for="node-input-mode" title="How to evaluate the ping results"><i class="fa fa-cogs"></i> Mode</label>
+    <select id="node-input-mode" title="How to evaluate the ping results">
         <option value="anyup">Any Up</option>
         <option value="anydown">Any Down</option>
         <option value="allup">All Up</option>
@@ -63,8 +69,16 @@ RED.nodes.registerType('multi-ping', {
     </select>
 </div>
 <div class="form-row">
-    <label for="node-input-timer"><i class="fa fa-clock-o"></i> Interval (seconds)</label>
-    <input type="number" id="node-input-timer" min="0" placeholder="0 = only on input">
+    <label for="node-input-timer" title="How often to ping automatically (0 = only on input)"><i class="fa fa-clock-o"></i> Interval (seconds)</label>
+    <input type="number" id="node-input-timer" min="0" placeholder="0 = only on input" title="How often to ping automatically (0 = only on input)">
+</div>
+<div class="form-row">
+    <label for="node-input-maxAttempts" title="Number of ping attempts per host (1-10)"><i class="fa fa-repeat"></i> Max Attempts</label>
+    <input type="number" id="node-input-maxAttempts" min="1" max="10" value="1" placeholder="1" title="Number of ping attempts per host (1-10)">
+</div>
+<div class="form-row">
+    <label for="node-input-timeout" title="Timeout for each ping attempt in seconds (1-30)"><i class="fa fa-hourglass-half"></i> Timeout (seconds)</label>
+    <input type="number" id="node-input-timeout" min="1" max="30" value="2" placeholder="2" title="Timeout for each ping attempt in seconds (1-30)">
 </div>
 
 <div class="form-tips">
@@ -79,3 +93,4 @@ RED.nodes.registerType('multi-ping', {
     </ul>
     Optionally set an <b>Interval</b> to ping automatically, or leave as 0 to only ping on input.
 </div>
+</script>
